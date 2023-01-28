@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - "./api/tmp/db:/var/lib/postgresql"
+      - postgres:/var/lib/postgresql
 
   api:
     build:
@@ -18,8 +18,12 @@ services:
         WORKDIR: $WORKDIR
     environment:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      API_DOMAIN: "localhost:$FRONT_PORT"
     volumes:
       - "./api:/$WORKDIR"
+      - rails_cache:/myapp/tmp/cache
+      - node_modules:/myapp/node_modules:cached
+      - bundle:/bundle:cached
     depends_on:
       - db
     ports:
@@ -30,6 +34,7 @@ services:
       context: ./front
       args:
         WORKDIR: $WORKDIR
+        API_URL: "http://localhost:$API_PORT"
     command: yarn run dev
     volumes:
       - "./front:/$WORKDIR"
@@ -37,3 +42,9 @@ services:
       - "$FRONT_PORT:3000"
     depends_on:
       - api
+
+volumes:
+  rails_cache:
+  node_modules:
+  postgres:
+  bundle:
